@@ -486,7 +486,7 @@ export const LessonView: React.FC<Props> = ({
   }
 
   // ==========================================
-  // 6. VIDEO RENDERER (NUCLEAR EVENT BLOCKING)
+  // 6. VIDEO RENDERER (NUCLEAR EVENT BLOCKING WITH CAPTURE PHASE)
   // ==========================================
   if ((content.type === 'PDF_VIEWER' || content.type === 'VIDEO_LECTURE') && (content.content.includes('youtube.com') || content.content.includes('youtu.be') || content.content.includes('drive.google.com/file') || content.content.includes('.mp4') || (content.videoPlaylist && content.videoPlaylist.length > 0))) {
       const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -503,13 +503,13 @@ export const LessonView: React.FC<Props> = ({
           embedUrl = `https://www.youtube.com/embed/${embedUrl.split('youtu.be/')[1]}?autoplay=1`;
       }
 
-      // STRICT PARAMETERS FOR YOUTUBE
+      // STRICT PARAMETERS: FS=0 disables native fullscreen button inside player
       const secureSrc = `${embedUrl}&modestbranding=1&rel=0&iv_load_policy=3&controls=1&disablekb=1&showinfo=0&fs=0`;
 
-      // 🔥 EVENT KILLER: Stops EVERYTHING (Click, Touch, ContextMenu)
+      // 🔥 NUCLEAR EVENT KILLER FUNCTION (Using Capture Phase logic)
       const killEvent = (e: any) => {
-          e.preventDefault();
           e.stopPropagation();
+          e.preventDefault();
           e.nativeEvent?.stopImmediatePropagation();
           return false;
       };
@@ -530,19 +530,19 @@ export const LessonView: React.FC<Props> = ({
               <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
                   <div ref={containerRef} className="flex-1 bg-black relative group overflow-hidden select-none isolate">
                       
-                      {/* 🔴 1. SHARE BUTTON BLOCKER (TOP RIGHT - INVISIBLE SHIELD) */}
+                      {/* 🔴 1. SHARE BUTTON BLOCKER (TOP RIGHT - INVISIBLE SOLID WALL) */}
+                      {/* Using capture phase events to kill touches before they reach iframe */}
                       <div
                         style={{
                           position: 'absolute',
                           top: 0,
                           right: 0,
-                          width: '250px', // Wider to catch stray taps
-                          height: '100px',
-                          zIndex: 2147483647, // Max Layer
-                          backgroundColor: 'rgba(255, 255, 255, 0.001)', // MAGIC FIX: Not perfectly transparent
-                          touchAction: 'none' // DISALLOWS GESTURES
+                          width: '250px', // Very Wide to catch all share/menu buttons
+                          height: '120px', // Deep enough
+                          zIndex: 2147483647, // Max Z-Index
+                          backgroundColor: 'rgba(255, 255, 255, 0.001)', // MAGIC: Browser treats as solid
+                          touchAction: 'none' // Disables browser gestures
                         }}
-                        // NUCLEAR EVENT HANDLING
                         onClickCapture={killEvent}
                         onTouchStartCapture={killEvent}
                         onMouseDownCapture={killEvent}
@@ -561,11 +561,11 @@ export const LessonView: React.FC<Props> = ({
                            width: '180px',
                            height: '80px',
                            zIndex: 2147483647,
-                           backgroundColor: 'rgba(255, 255, 255, 0.001)', // Visible to browser, invisible to user
+                           backgroundColor: 'rgba(255, 255, 255, 0.001)', // MAGIC: Solid but see-through
                            cursor: 'pointer',
                            touchAction: 'auto'
                          }}
-                         // We do NOT kill events here so the link works
+                         // Events allowed here for redirect
                       />
 
                       {/* 🔒 3. BOTTOM LEFT CONTROLS BLOCKER */}
@@ -574,9 +574,9 @@ export const LessonView: React.FC<Props> = ({
                           position: 'absolute',
                           bottom: 0,
                           left: 0,
-                          width: '100%', // COVERS ENTIRE BOTTOM STRIP (except where the link sits above)
+                          width: '100%', // COVERS FULL BOTTOM STRIP (Link sits on top via Z-index if needed, but here they overlap cleanly)
                           height: '80px',
-                          zIndex: 2147483646, // One layer below the link
+                          zIndex: 2147483646, // Just below the link
                           backgroundColor: 'rgba(255, 255, 255, 0.001)',
                           touchAction: 'none'
                         }}
