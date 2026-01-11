@@ -42,18 +42,17 @@ export const LessonView: React.FC<Props> = ({
   // ==========================================
   // 1. STATES & INITIALIZATION
   // ==========================================
-  // MCQ State Management
   const [mcqState, setMcqState] = useState<Record<number, number | null>>({});
-  const [showResults, setShowResults] = useState(false); // Used to trigger Analysis Mode
+  const [showResults, setShowResults] = useState(false);
   const [localMcqData, setLocalMcqData] = useState<MCQItem[]>([]);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
   const [analysisUnlocked, setAnalysisUnlocked] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   
   // Timer & UI State
-  const [sessionTime, setSessionTime] = useState(0); // Total seconds
+  const [sessionTime, setSessionTime] = useState(0); 
   const [batchIndex, setBatchIndex] = useState(0);
-  const BATCH_SIZE = 50; // Pagination for large question sets
+  const BATCH_SIZE = 50; 
 
   // Refs for UI interactions
   const containerRef = useRef<HTMLDivElement>(null);
@@ -70,7 +69,7 @@ export const LessonView: React.FC<Props> = ({
   // 2. EFFECTS (TIMER & FULLSCREEN & SECURITY)
   // ==========================================
   
-  // Timer Effect - Runs only when quiz is active
+  // Timer Effect
   useEffect(() => {
       let interval: any;
       if (!showResults && !showSubmitModal && !showResumePrompt) {
@@ -81,7 +80,7 @@ export const LessonView: React.FC<Props> = ({
       return () => clearInterval(interval);
   }, [showResults, showSubmitModal, showResumePrompt]);
 
-  // Fullscreen Handler - Compatible with most browsers
+  // Fullscreen Handler
   const toggleFullScreen = () => {
       if (!document.fullscreenElement) {
           containerRef.current?.requestFullscreen().catch(err => {
@@ -98,7 +97,7 @@ export const LessonView: React.FC<Props> = ({
       if (content?.type.includes('MCQ') && Object.keys(mcqState).length > 0 && !showResults) {
           const handleBeforeUnload = (e: BeforeUnloadEvent) => {
               e.preventDefault();
-              e.returnValue = ''; // Standard browser prompt
+              e.returnValue = ''; 
           };
           window.addEventListener('beforeunload', handleBeforeUnload);
           return () => window.removeEventListener('beforeunload', handleBeforeUnload);
@@ -130,7 +129,6 @@ export const LessonView: React.FC<Props> = ({
   if (content?.type === 'NOTES_IMAGE_AI') {
       const preventAction = (e: React.MouseEvent | React.TouchEvent) => e.preventDefault();
       
-      // OPTION A: HTML CONTENT (Pre-rendered AI Notes)
       if (content.aiHtmlContent) {
           const decodedHtml = decodeHtml(content.aiHtmlContent);
           return (
@@ -150,7 +148,7 @@ export const LessonView: React.FC<Props> = ({
                   
                   <div className="flex-1 overflow-y-auto w-full pt-20 pb-10 px-6 md:px-12 selection:bg-teal-100">
                       <div 
-                          className="prose prose-slate max-w-none prose-img:rounded-3xl prose-img:shadow-2xl prose-headings:font-black prose-headings:text-slate-900 prose-a:text-blue-600 [&_a]:pointer-events-none [&_a]:cursor-text [&_a]:no-underline [&_iframe]:pointer-events-none prose-blockquote:border-teal-500 prose-blockquote:bg-teal-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg"
+                          className="prose prose-slate max-w-none prose-img:rounded-3xl prose-img:shadow-2xl prose-headings:font-black prose-headings:text-slate-900 prose-a:text-blue-600 [&_a]:pointer-events-none [&_a]:cursor-text [&_a]:no-underline [&_iframe]:pointer-events-none"
                           dangerouslySetInnerHTML={{ __html: decodedHtml }}
                       />
                       <div className="h-20 flex items-center justify-center mt-10 border-t border-slate-100">
@@ -161,7 +159,6 @@ export const LessonView: React.FC<Props> = ({
           );
       }
 
-      // OPTION B: IMAGE VIEWER (Standard Image Notes)
       return (
           <div 
               className="fixed inset-0 z-50 bg-[#050505] flex flex-col overflow-hidden animate-in fade-in"
@@ -206,39 +203,31 @@ export const LessonView: React.FC<Props> = ({
   }
 
   // ==========================================
-  // 5. MCQ SYSTEM (FULL LOGIC: Resume, Shuffle, Analysis)
+  // 5. MCQ SYSTEM (FULL LOGIC)
   // ==========================================
   if ((content?.type === 'MCQ_ANALYSIS' || content?.type === 'MCQ_SIMPLE') && content.mcqData) {
       
-      // --- Resume & Shuffle Logic ---
       useEffect(() => {
           if (!content.mcqData) return;
-          
-          // Case 1: Viewing History (User already attempted)
           if (content.userAnswers) {
-              // @ts-ignore
-              setMcqState(content.userAnswers);
+              setMcqState(content.userAnswers as any);
               setShowResults(true);
               setAnalysisUnlocked(true);
-              setLocalMcqData(content.mcqData); // Use stored order if available, else default
+              setLocalMcqData(content.mcqData); 
               return;
           }
 
-          // Case 2: Check LocalStorage for saved progress
           const progressKey = `nst_mcq_progress_${chapter.id}`;
           const savedProgress = localStorage.getItem(progressKey);
 
           if (savedProgress) {
               setShowResumePrompt(true);
-              // Prepare a shuffled version in background in case they restart
               setLocalMcqData([...content.mcqData].sort(() => Math.random() - 0.5));
           } else {
-              // Case 3: Fresh Start (Shuffle)
               setLocalMcqData([...content.mcqData].sort(() => Math.random() - 0.5));
           }
       }, [content.mcqData, chapter.id, content.userAnswers]);
 
-      // --- Auto-Save Progress ---
       useEffect(() => {
           if (!showResults && Object.keys(mcqState).length > 0) {
               const key = `nst_mcq_progress_${chapter.id}`;
@@ -250,7 +239,6 @@ export const LessonView: React.FC<Props> = ({
           }
       }, [mcqState, batchIndex, chapter.id, localMcqData, showResults]);
 
-      // Handlers
       const handleResume = () => {
           const key = `nst_mcq_progress_${chapter.id}`;
           const saved = localStorage.getItem(key);
@@ -296,7 +284,6 @@ export const LessonView: React.FC<Props> = ({
       const currentBatchData = localMcqData.slice(batchIndex * BATCH_SIZE, (batchIndex + 1) * BATCH_SIZE);
       const hasMore = (batchIndex + 1) * BATCH_SIZE < localMcqData.length;
       
-      // Score Calculation
       const score = Object.keys(mcqState).reduce((acc, key) => {
           const qIdx = parseInt(key);
           return acc + (mcqState[qIdx] === localMcqData[qIdx].correctAnswer ? 1 : 0);
@@ -315,11 +302,9 @@ export const LessonView: React.FC<Props> = ({
 
       return (
           <div className="flex flex-col h-full bg-slate-50 animate-in fade-in relative">
-               {/* Global Overlays */}
                <CustomAlert isOpen={alertConfig.isOpen} message={alertConfig.message} type="ERROR" onClose={() => setAlertConfig({...alertConfig, isOpen: false})} />
                <CustomConfirm isOpen={confirmConfig.isOpen} title={confirmConfig.title} message={confirmConfig.message} onConfirm={confirmConfig.onConfirm} onCancel={() => setConfirmConfig({...confirmConfig, isOpen: false})} />
 
-               {/* Resume Prompt Modal */}
                {showResumePrompt && !showResults && (
                    <div className="absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
                        <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm text-center shadow-2xl scale-in-center">
@@ -336,7 +321,6 @@ export const LessonView: React.FC<Props> = ({
                    </div>
                )}
 
-               {/* Submit Confirmation Modal */}
                {showSubmitModal && (
                    <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-end justify-center sm:items-center p-4">
                        <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-sm text-center shadow-2xl animate-in slide-in-from-bottom-10 sm:zoom-in">
@@ -356,7 +340,6 @@ export const LessonView: React.FC<Props> = ({
                    </div>
                )}
 
-               {/* MCQ Header */}
                <div className="flex items-center justify-between p-4 bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
                    <div className="flex gap-2">
                        <button onClick={onBack} className="flex items-center gap-2 text-slate-600 font-bold text-sm bg-slate-100 px-4 py-2.5 rounded-xl hover:bg-slate-200 transition-colors active:scale-95">
@@ -384,7 +367,6 @@ export const LessonView: React.FC<Props> = ({
                    </div>
                </div>
                
-               {/* Question List */}
                <div className="flex-1 overflow-y-auto p-4 space-y-6 max-w-3xl mx-auto w-full pb-32 mcq-container scroll-smooth">
                    {currentBatchData.map((q, localIdx) => {
                        const idx = (batchIndex * BATCH_SIZE) + localIdx;
@@ -402,13 +384,11 @@ export const LessonView: React.FC<Props> = ({
                                    {q.options.map((opt, oIdx) => {
                                        let btnClass = "w-full text-left p-4 rounded-2xl border-2 transition-all text-sm font-bold relative overflow-hidden ";
                                        
-                                       // ANALYSIS STATE
                                        if (showResults && analysisUnlocked) {
                                            if (oIdx === q.correctAnswer) btnClass += "bg-green-50 border-green-500 text-green-700 shadow-sm";
                                            else if (userAnswer === oIdx) btnClass += "bg-red-50 border-red-500 text-red-700 shadow-sm";
                                            else btnClass += "bg-slate-50 border-slate-100 opacity-40";
                                        } 
-                                       // INTERACTIVE STATE
                                        else if (isAnswered) {
                                             if (userAnswer === oIdx) btnClass += "bg-blue-600 border-blue-600 text-white shadow-xl scale-[1.02] z-10";
                                             else btnClass += "bg-slate-50 border-slate-100 opacity-50 grayscale";
@@ -435,7 +415,6 @@ export const LessonView: React.FC<Props> = ({
                                    })}
                                </div>
                                
-                               {/* Explanation Box */}
                                {showResults && analysisUnlocked && (
                                    <div className="mt-6 pt-6 border-t-2 border-dashed border-slate-100 animate-in slide-in-from-top-4">
                                        <div className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest mb-3 ${isCorrect ? 'text-green-600' : 'text-red-500'}`}>
@@ -455,7 +434,6 @@ export const LessonView: React.FC<Props> = ({
                    })}
                </div>
 
-               {/* Bottom Navigation Bar */}
                <div className="p-4 bg-white/90 backdrop-blur-xl border-t border-slate-200 sticky bottom-0 z-[60] grid grid-cols-3 gap-3 items-center shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
                    <div className="flex justify-start">
                        {batchIndex > 0 && (
@@ -508,7 +486,7 @@ export const LessonView: React.FC<Props> = ({
   }
 
   // ==========================================
-  // 6. VIDEO RENDERER (BOTTOM LOCKED ONLY)
+  // 6. VIDEO RENDERER (NUCLEAR BLOCKING - TOP RIGHT & BOTTOM FULL)
   // ==========================================
   if ((content.type === 'PDF_VIEWER' || content.type === 'VIDEO_LECTURE') && (content.content.includes('youtube.com') || content.content.includes('youtu.be') || content.content.includes('drive.google.com/file') || content.content.includes('.mp4') || (content.videoPlaylist && content.videoPlaylist.length > 0))) {
       const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -520,20 +498,19 @@ export const LessonView: React.FC<Props> = ({
       let embedUrl = currentVideo.url;
       
       if (embedUrl.includes('youtube.com/watch')) {
-          const videoId = new URL(embedUrl).searchParams.get('v');
-          embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+          embedUrl = `https://www.youtube.com/embed/${new URL(embedUrl).searchParams.get('v')}?autoplay=1`;
       } else if (embedUrl.includes('youtu.be/')) {
-          const videoId = embedUrl.split('youtu.be/')[1];
-          embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+          embedUrl = `https://www.youtube.com/embed/${embedUrl.split('youtu.be/')[1]}?autoplay=1`;
       }
 
-      // Parameters to minimize distractions
+      // STRICT PARAMETERS FOR YOUTUBE
       const secureSrc = `${embedUrl}&modestbranding=1&rel=0&iv_load_policy=3&controls=1&disablekb=1&showinfo=0&fs=0`;
 
-      // 🔥 TOUCH BLOCKER FUNCTION
-      const blockTouch = (e: any) => {
+      // 🔥 NUCLEAR EVENT KILLER FUNCTION
+      const killEvent = (e: any) => {
           e.preventDefault();
           e.stopPropagation();
+          e.nativeEvent?.stopImmediatePropagation();
           return false;
       };
       
@@ -551,34 +528,53 @@ export const LessonView: React.FC<Props> = ({
               </div>
               
               <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-                  <div ref={containerRef} className="flex-1 bg-black relative group overflow-hidden select-none">
+                  <div ref={containerRef} className="flex-1 bg-black relative group overflow-hidden select-none isolate">
                       
-                      {/* 🔴 BOTTOM BLOCKER: Covers Seek Bar & YouTube Logo (Full Width) */}
+                      {/* 🔴 1. SHARE BUTTON BLOCKER (TOP RIGHT - INVISIBLE SHIELD) */}
                       <div
-                        className="absolute bg-transparent"
                         style={{
-                          bottom: 0,
-                          left: 0,
-                          width: '100%',   // Pura Niche ka hissa cover karega
-                          height: '80px',  // Height itni ki logo aur seek bar dono chhup jayein
-                          zIndex: 9999,
+                          position: 'absolute',
+                          top: 0,
+                          right: 0,
+                          width: '180px',
+                          height: '90px',
+                          zIndex: 2147483647,
+                          backgroundColor: 'rgba(255, 255, 255, 0.001)', // Almost invisible but catches touch
                           touchAction: 'none'
                         }}
-                        onClick={blockTouch}
-                        onMouseDown={blockTouch}
-                        onTouchStart={blockTouch}
-                        onContextMenu={(e) => e.preventDefault()}
+                        onClickCapture={killEvent}
+                        onTouchStartCapture={killEvent}
+                        onMouseDownCapture={killEvent}
+                        onContextMenu={killEvent}
                       />
 
-                      {/* 🔘 FULL SCREEN BUTTON (Moved to Top-Left) */}
+                      {/* 🔴 2. BOTTOM FULL BLOCKER (SEEKBAR + LOGO AREA) */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: 0,
+                          left: 0,
+                          width: '100%', // Blocks entire bottom strip
+                          height: '80px', 
+                          zIndex: 2147483647,
+                          backgroundColor: 'rgba(255, 255, 255, 0.001)', // Almost invisible
+                          touchAction: 'none'
+                        }}
+                        onClickCapture={killEvent}
+                        onTouchStartCapture={killEvent}
+                        onMouseDownCapture={killEvent}
+                      />
+
+                      {/* 🔘 FULLSCREEN BUTTON (MOVED TO TOP LEFT) */}
+                      {/* This is placed ABOVE the blockers z-index so it remains clickable */}
                       <button 
                           onClick={toggleFullScreen} 
-                          className="absolute top-4 left-4 z-[10000] bg-black/60 text-white/90 p-3 rounded-2xl backdrop-blur-md border border-white/10 hover:bg-black hover:text-white transition-all shadow-xl active:scale-90"
+                          className="absolute top-4 left-4 z-[2147483647] bg-black/60 text-white/90 p-3 rounded-2xl backdrop-blur-md border border-white/10 hover:bg-black hover:text-white transition-all shadow-xl active:scale-90"
                       >
                           <Maximize size={22} />
                       </button>
 
-                      {/* 📺 IFRAME */}
+                      {/* 📺 VIDEO IFRAME */}
                       <iframe 
                            key={secureSrc}
                            src={secureSrc}
@@ -616,7 +612,6 @@ export const LessonView: React.FC<Props> = ({
   // ==========================================
   if (content.type === 'PDF_VIEWER' || content.type === 'PDF_FREE' || content.type === 'PDF_PREMIUM') {
       const isPdf = content.content.toLowerCase().endsWith('.pdf') || content.content.includes('drive.google.com') || content.content.includes('docs.google.com');
-      
       return (
           <div className="flex flex-col h-[calc(100vh-80px)] bg-slate-50">
               <div className="flex items-center justify-between p-4 bg-white border-b border-slate-200 shadow-sm">
@@ -628,39 +623,15 @@ export const LessonView: React.FC<Props> = ({
                        <Maximize size={20} />
                    </button>
               </div>
-              
               <div ref={containerRef} className="flex-1 w-full bg-slate-200/50 p-4 md:p-8 relative overflow-hidden">
                   <div className="w-full h-full bg-white rounded-[2rem] shadow-xl overflow-hidden relative border border-slate-200">
                       {isPdf ? (
                          <div className="relative w-full h-full group">
-                            <iframe 
-                                 src={content.content.replace('/view', '/preview').replace('/edit', '/preview')} 
-                                 className="w-full h-full border-0" 
-                                 allowFullScreen
-                                 sandbox="allow-scripts allow-same-origin"
-                                 title="PDF Viewer"
-                             />
-                             {/* TOOLBAR MASK: Prevents direct interaction with top-right Google controls */}
-                             <div className="absolute top-0 right-0 w-32 h-24 z-10 bg-transparent pointer-events-auto"></div>
+                            <iframe src={content.content.replace('/view', '/preview').replace('/edit', '/preview')} className="w-full h-full border-0" allowFullScreen sandbox="allow-scripts allow-same-origin" title="PDF Viewer" />
+                            <div className="absolute top-0 right-0 w-32 h-24 z-10 bg-transparent pointer-events-auto"></div>
                          </div>
                       ) : (
-                          <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-white">
-                              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-                                  <ExternalLink size={32} className="text-slate-400" />
-                              </div>
-                              <h3 className="text-2xl font-black text-slate-800 mb-2">External Content</h3>
-                              <p className="text-slate-500 mb-8 max-w-md font-medium leading-relaxed">
-                                  This content is hosted securely on an external platform and cannot be directly embedded here.
-                              </p>
-                              <a 
-                                  href={content.content}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="bg-slate-900 text-white font-bold py-4 px-8 rounded-2xl shadow-lg hover:bg-blue-600 transition-all active:scale-95"
-                              >
-                                  Open in Browser
-                              </a>
-                          </div>
+                          <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-white"><ExternalLink size={48} className="text-slate-400 mb-4" /><h3 className="text-2xl font-black text-slate-800 mb-2">External Content</h3><p className="text-slate-500 mb-8 max-w-md">This content is hosted securely on an external platform.</p><a href={content.content} target="_blank" rel="noopener noreferrer" className="bg-slate-900 text-white font-bold py-4 px-8 rounded-2xl shadow-lg">Open in Browser</a></div>
                       )}
                   </div>
               </div>
@@ -676,28 +647,13 @@ export const LessonView: React.FC<Props> = ({
       return (
         <div className="bg-white min-h-screen pb-20 animate-in fade-in">
            <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-slate-100 px-4 py-3 flex items-center justify-between shadow-sm">
-               <button onClick={onBack} className="p-2 -ml-2 text-slate-500 hover:text-slate-900 transition-colors">
-                   <ArrowLeft size={20} />
-               </button>
-               <div className="text-center">
-                   <h3 className="font-black text-slate-800 text-sm leading-tight">{chapter.title}</h3>
-                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{content.type === 'NOTES_HTML_PREMIUM' ? 'Premium Notes' : 'Free Notes'}</p>
-               </div>
+               <button onClick={onBack} className="p-2 -ml-2 text-slate-500 hover:text-slate-900"><ArrowLeft size={20} /></button>
+               <div className="text-center"><h3 className="font-black text-slate-800 text-sm leading-tight">{chapter.title}</h3><p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{content.type === 'NOTES_HTML_PREMIUM' ? 'Premium Notes' : 'Free Notes'}</p></div>
                <div className="w-8"></div>
            </div>
-
            <div className="max-w-4xl mx-auto p-6 md:p-12">
-               <div 
-                   className="prose prose-slate max-w-none prose-img:rounded-3xl prose-headings:text-slate-900 prose-headings:font-black prose-a:text-blue-600 [&_a]:pointer-events-none [&_a]:cursor-text [&_a]:no-underline [&_iframe]:pointer-events-none prose-p:text-slate-600 prose-p:leading-loose"
-                   dangerouslySetInnerHTML={{ __html: decodedContent }}
-               />
-               
-               <div className="mt-16 pt-10 border-t border-slate-100 text-center">
-                   <p className="text-xs text-slate-300 font-black uppercase tracking-[0.2em] mb-6">End of Section</p>
-                   <button onClick={onBack} className="bg-slate-900 text-white font-bold py-4 px-12 rounded-[2rem] shadow-2xl hover:bg-slate-800 transition-all active:scale-95">
-                       Complete & Close
-                   </button>
-               </div>
+               <div className="prose prose-slate max-w-none prose-img:rounded-3xl prose-headings:text-slate-900 prose-headings:font-black" dangerouslySetInnerHTML={{ __html: decodedContent }} />
+               <div className="mt-16 pt-10 border-t border-slate-100 text-center"><button onClick={onBack} className="bg-slate-900 text-white font-bold py-4 px-12 rounded-[2rem] shadow-2xl">Complete & Close</button></div>
            </div>
         </div>
       );
@@ -709,40 +665,18 @@ export const LessonView: React.FC<Props> = ({
   return (
     <div className="bg-white min-h-screen pb-32 animate-in fade-in">
        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-slate-100 px-4 py-4 flex items-center justify-between shadow-sm">
-           <button onClick={onBack} className="p-2 -ml-2 text-slate-500 hover:text-slate-900 transition-colors">
-               <ArrowLeft size={22} />
-           </button>
-           <div className="text-center">
-               <h3 className="font-black text-slate-800 text-sm leading-tight uppercase tracking-tight">{chapter.title}</h3>
-               <p className="text-[9px] text-blue-500 font-bold uppercase tracking-widest mt-1">{content.subtitle || 'Study Material'}</p>
-           </div>
+           <button onClick={onBack} className="p-2 -ml-2 text-slate-500 hover:text-slate-900"><ArrowLeft size={22} /></button>
+           <div className="text-center"><h3 className="font-black text-slate-800 text-sm leading-tight uppercase tracking-tight">{chapter.title}</h3><p className="text-[9px] text-blue-500 font-bold uppercase tracking-widest mt-1">{content.subtitle || 'Study Material'}</p></div>
            <div className="w-8"></div>
        </div>
-
        <div className="max-w-3xl mx-auto p-6 md:p-14">
-           <div className="prose prose-slate prose-lg max-w-none prose-headings:text-slate-900 prose-p:text-slate-600 prose-li:text-slate-600 prose-strong:text-slate-900 prose-a:text-blue-600">
-               <ReactMarkdown 
-                   remarkPlugins={[remarkMath]} 
-                   rehypePlugins={[rehypeKatex]}
-                   components={{
-                       h1: ({node, ...props}) => <h1 className="text-4xl font-black mb-8 pb-4 border-b-4 border-slate-100 leading-tight" {...props} />,
-                       h2: ({node, ...props}) => <h2 className="text-2xl font-black mt-12 mb-6 text-blue-800 flex items-center gap-3" {...props} />,
-                       ul: ({node, ...props}) => <ul className="list-disc pl-6 space-y-3 my-6 text-slate-700" {...props} />,
-                       li: ({node, ...props}) => <li className="pl-2 marker:text-blue-500 marker:font-bold" {...props} />,
-                       blockquote: ({node, ...props}) => <blockquote className="border-l-[6px] border-blue-500 pl-6 py-4 my-8 bg-blue-50/50 rounded-r-2xl italic text-blue-900 font-medium shadow-sm" {...props} />,
-                       code: ({node, ...props}) => <code className="bg-slate-100 text-pink-600 px-2 py-1 rounded-lg text-sm font-mono font-bold border border-slate-200" {...props} />,
-                   }}
-               >
-                   {content.content}
-               </ReactMarkdown>
+           <div className="prose prose-slate prose-lg max-w-none">
+               <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]} components={{
+                       h1: ({node, ...props}) => <h1 className="text-4xl font-black mb-8 pb-4 border-b-4 border-slate-100" {...props} />,
+                       blockquote: ({node, ...props}) => <blockquote className="border-l-[6px] border-blue-500 pl-6 py-4 my-8 bg-blue-50/50 rounded-r-2xl italic" {...props} />,
+                   }}>{content.content}</ReactMarkdown>
            </div>
-           
-           <div className="mt-20 pt-12 border-t border-slate-100 text-center">
-               <div className="w-16 h-1 bg-slate-200 mx-auto rounded-full mb-8"></div>
-               <button onClick={onBack} className="bg-slate-900 text-white font-black py-5 px-16 rounded-[2.5rem] shadow-2xl hover:bg-blue-600 transition-all active:scale-95 flex items-center gap-3 mx-auto">
-                   <CheckCircle size={20} /> MARK AS COMPLETE
-               </button>
-           </div>
+           <div className="mt-20 pt-12 border-t border-slate-100 text-center"><button onClick={onBack} className="bg-slate-900 text-white font-black py-5 px-16 rounded-[2.5rem] shadow-2xl">MARK AS COMPLETE</button></div>
        </div>
     </div>
   );
