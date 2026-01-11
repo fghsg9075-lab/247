@@ -506,11 +506,11 @@ export const LessonView: React.FC<Props> = ({
       // STRICT PARAMETERS: FS=0 disables native fullscreen button inside player
       const secureSrc = `${embedUrl}&modestbranding=1&rel=0&iv_load_policy=3&controls=1&disablekb=1&showinfo=0&fs=0`;
 
-      // 🔥 NUCLEAR EVENT KILLER FUNCTION (Using Capture Phase logic)
+      // 🔥 NUCLEAR EVENT KILLER FUNCTION (Capture Phase + Stop Propagation)
       const killEvent = (e: any) => {
           e.stopPropagation();
           e.preventDefault();
-          e.nativeEvent?.stopImmediatePropagation();
+          if(e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
           return false;
       };
       
@@ -531,16 +531,16 @@ export const LessonView: React.FC<Props> = ({
                   <div ref={containerRef} className="flex-1 bg-black relative group overflow-hidden select-none isolate">
                       
                       {/* 🔴 1. SHARE BUTTON BLOCKER (TOP RIGHT - INVISIBLE SOLID WALL) */}
-                      {/* Using capture phase events to kill touches before they reach iframe */}
+                      {/* Using rgba(255,255,255,0.001) trick so mobile browser sees it as solid object */}
                       <div
                         style={{
                           position: 'absolute',
                           top: 0,
                           right: 0,
-                          width: '250px', // Very Wide to catch all share/menu buttons
-                          height: '120px', // Deep enough
+                          width: '250px', // Extra Wide to catch share & menu
+                          height: '120px', 
                           zIndex: 2147483647, // Max Z-Index
-                          backgroundColor: 'rgba(255, 255, 255, 0.001)', // MAGIC: Browser treats as solid
+                          backgroundColor: 'rgba(255, 255, 255, 0.001)', // MAGIC FIX
                           touchAction: 'none' // Disables browser gestures
                         }}
                         onClickCapture={killEvent}
@@ -561,11 +561,11 @@ export const LessonView: React.FC<Props> = ({
                            width: '180px',
                            height: '80px',
                            zIndex: 2147483647,
-                           backgroundColor: 'rgba(255, 255, 255, 0.001)', // MAGIC: Solid but see-through
+                           backgroundColor: 'rgba(255, 255, 255, 0.001)', // MAGIC FIX
                            cursor: 'pointer',
                            touchAction: 'auto'
                          }}
-                         // Events allowed here for redirect
+                         // We do NOT kill events here so the link works
                       />
 
                       {/* 🔒 3. BOTTOM LEFT CONTROLS BLOCKER */}
@@ -574,7 +574,7 @@ export const LessonView: React.FC<Props> = ({
                           position: 'absolute',
                           bottom: 0,
                           left: 0,
-                          width: '100%', // COVERS FULL BOTTOM STRIP (Link sits on top via Z-index if needed, but here they overlap cleanly)
+                          width: '100%', // COVERS FULL BOTTOM STRIP
                           height: '80px',
                           zIndex: 2147483646, // Just below the link
                           backgroundColor: 'rgba(255, 255, 255, 0.001)',
