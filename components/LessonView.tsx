@@ -124,7 +124,7 @@ export const LessonView: React.FC<Props> = ({
   }
 
   // ==========================================
-  // 4. AI IMAGE/HTML NOTES VIEW (STRICT MODE)
+  // 4. AI IMAGE/HTML NOTES VIEW
   // ==========================================
   if (content?.type === 'NOTES_IMAGE_AI') {
       const preventAction = (e: React.MouseEvent | React.TouchEvent) => e.preventDefault();
@@ -486,7 +486,7 @@ export const LessonView: React.FC<Props> = ({
   }
 
   // ==========================================
-  // 6. VIDEO RENDERER (NUCLEAR EVENT BLOCKING WITH CAPTURE PHASE)
+  // 6. VIDEO RENDERER (ZOOM & CROP JUGAD - 135% ZOOM)
   // ==========================================
   if ((content.type === 'PDF_VIEWER' || content.type === 'VIDEO_LECTURE') && (content.content.includes('youtube.com') || content.content.includes('youtu.be') || content.content.includes('drive.google.com/file') || content.content.includes('.mp4') || (content.videoPlaylist && content.videoPlaylist.length > 0))) {
       const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -506,14 +506,6 @@ export const LessonView: React.FC<Props> = ({
       // STRICT PARAMETERS: FS=0 disables native fullscreen button inside player
       const secureSrc = `${embedUrl}&modestbranding=1&rel=0&iv_load_policy=3&controls=1&disablekb=1&showinfo=0&fs=0`;
 
-      // 🔥 NUCLEAR EVENT KILLER FUNCTION (Capture Phase + Stop Propagation)
-      const killEvent = (e: any) => {
-          e.stopPropagation();
-          e.preventDefault();
-          if(e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
-          return false;
-      };
-      
       return (
           <div className="flex flex-col h-[calc(100vh-80px)] bg-[#030712] animate-in fade-in">
               <div className="flex items-center justify-between p-4 bg-slate-900 border-b border-white/10 shadow-lg relative z-[10000]">
@@ -530,60 +522,6 @@ export const LessonView: React.FC<Props> = ({
               <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
                   <div ref={containerRef} className="flex-1 bg-black relative group overflow-hidden select-none isolate">
                       
-                      {/* 🔴 1. SHARE BUTTON BLOCKER (TOP RIGHT - INVISIBLE SOLID WALL) */}
-                      {/* Using rgba(255,255,255,0.001) trick so mobile browser sees it as solid object */}
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          right: 0,
-                          width: '250px', // Extra Wide to catch share & menu
-                          height: '100px', 
-                          zIndex: 2147483647, // Max Z-Index
-                          backgroundColor: 'rgba(255, 255, 255, 0.001)', // MAGIC FIX
-                          touchAction: 'none' // Disables browser gestures
-                        }}
-                        onClickCapture={killEvent}
-                        onTouchStartCapture={killEvent}
-                        onMouseDownCapture={killEvent}
-                        onContextMenu={killEvent}
-                      />
-
-                      {/* 🔗 2. REDIRECT LINK (LOGO MASK - ALLOWS CLICK) */}
-                      <a
-                         href="https://youtube.com/@ehsansir2.0?si=80l2sFqj85RnGulA"
-                         target="_blank"
-                         rel="noopener noreferrer"
-                         style={{
-                           position: 'absolute',
-                           bottom: 0,
-                           right: 0,
-                           width: '180px',
-                           height: '80px',
-                           zIndex: 2147483647,
-                           backgroundColor: 'rgba(255, 255, 255, 0.001)', // MAGIC FIX
-                           cursor: 'pointer',
-                           touchAction: 'auto'
-                         }}
-                         // We do NOT kill events here so the link works
-                      />
-
-                      {/* 🔒 3. BOTTOM LEFT CONTROLS BLOCKER */}
-                      <div
-                        style={{
-                          position: 'absolute',
-                          bottom: 0,
-                          left: 0,
-                          width: '100%', // COVERS FULL BOTTOM STRIP
-                          height: '80px',
-                          zIndex: 2147483646, // Just below the link
-                          backgroundColor: 'rgba(255, 255, 255, 0.001)',
-                          touchAction: 'none'
-                        }}
-                        onClickCapture={killEvent}
-                        onTouchStartCapture={killEvent}
-                      />
-
                       {/* 🔘 FULLSCREEN BUTTON (MOVED TO TOP LEFT & SECURED) */}
                       <button 
                           onClick={toggleFullScreen} 
@@ -592,17 +530,24 @@ export const LessonView: React.FC<Props> = ({
                           <Maximize size={22} />
                       </button>
 
-                      {/* 📺 VIDEO IFRAME */}
-                      <iframe 
-                           key={secureSrc}
-                           src={secureSrc}
-                           className="w-full h-full border-0 relative"
-                           style={{ zIndex: 1 }}
-                           allow="autoplay; fullscreen; picture-in-picture"
-                           allowFullScreen
-                           sandbox="allow-scripts allow-same-origin allow-presentation"
-                           title={currentVideo.title}
-                       />
+                      {/* 📺 VIDEO IFRAME (ZOOMED 135% TO HIDE SHARE BUTTON & LOGO) */}
+                      <div style={{ 
+                          width: '135%',        // Zoom in to push UI elements out
+                          height: '135%',       
+                          marginLeft: '-17.5%', // Center horizontally
+                          marginTop: '-15%',    // Center vertically & push top controls up
+                          pointerEvents: 'auto',
+                          position: 'relative'
+                      }}>
+                          <iframe 
+                               key={secureSrc}
+                               src={secureSrc}
+                               className="w-full h-full border-0"
+                               allow="autoplay; fullscreen; picture-in-picture"
+                               allowFullScreen
+                               title={currentVideo.title}
+                           />
+                      </div>
                   </div>
                   
                   {/* Playlist Sidebar */}
@@ -699,4 +644,3 @@ export const LessonView: React.FC<Props> = ({
     </div>
   );
 };
-
