@@ -148,7 +148,7 @@ export const LessonView: React.FC<Props> = ({
                   
                   <div className="flex-1 overflow-y-auto w-full pt-20 pb-10 px-6 md:px-12 selection:bg-teal-100">
                       <div 
-                          className="prose prose-slate max-w-none prose-img:rounded-3xl prose-img:shadow-2xl prose-headings:font-black prose-headings:text-slate-900 prose-a:text-blue-600 [&_a]:pointer-events-none [&_a]:cursor-text [&_a]:no-underline [&_iframe]:pointer-events-none"
+                          className="prose prose-slate max-w-none prose-img:rounded-3xl prose-img:shadow-2xl prose-headings:font-black prose-headings:text-slate-900 prose-a:text-blue-600 [&_a]:pointer-events-none [&_a]:cursor-text [&_a]:no-underline [&_iframe]:pointer-events-none prose-blockquote:border-teal-500 prose-blockquote:bg-teal-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg"
                           dangerouslySetInnerHTML={{ __html: decodedHtml }}
                       />
                       <div className="h-20 flex items-center justify-center mt-10 border-t border-slate-100">
@@ -486,7 +486,7 @@ export const LessonView: React.FC<Props> = ({
   }
 
   // ==========================================
-  // 6. VIDEO RENDERER (NUCLEAR BLOCKING - TOP RIGHT & BOTTOM FULL)
+  // 6. VIDEO RENDERER (NUCLEAR EVENT BLOCKING)
   // ==========================================
   if ((content.type === 'PDF_VIEWER' || content.type === 'VIDEO_LECTURE') && (content.content.includes('youtube.com') || content.content.includes('youtu.be') || content.content.includes('drive.google.com/file') || content.content.includes('.mp4') || (content.videoPlaylist && content.videoPlaylist.length > 0))) {
       const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -506,7 +506,7 @@ export const LessonView: React.FC<Props> = ({
       // STRICT PARAMETERS FOR YOUTUBE
       const secureSrc = `${embedUrl}&modestbranding=1&rel=0&iv_load_policy=3&controls=1&disablekb=1&showinfo=0&fs=0`;
 
-      // 🔥 NUCLEAR EVENT KILLER FUNCTION
+      // 🔥 EVENT KILLER: Stops EVERYTHING (Click, Touch, ContextMenu)
       const killEvent = (e: any) => {
           e.preventDefault();
           e.stopPropagation();
@@ -536,37 +536,55 @@ export const LessonView: React.FC<Props> = ({
                           position: 'absolute',
                           top: 0,
                           right: 0,
-                          width: '180px',
-                          height: '90px',
-                          zIndex: 2147483647,
-                          backgroundColor: 'rgba(255, 255, 255, 0.001)', // Almost invisible but catches touch
-                          touchAction: 'none'
+                          width: '250px', // Wider to catch stray taps
+                          height: '100px',
+                          zIndex: 2147483647, // Max Layer
+                          backgroundColor: 'rgba(255, 255, 255, 0.001)', // MAGIC FIX: Not perfectly transparent
+                          touchAction: 'none' // DISALLOWS GESTURES
                         }}
+                        // NUCLEAR EVENT HANDLING
                         onClickCapture={killEvent}
                         onTouchStartCapture={killEvent}
                         onMouseDownCapture={killEvent}
                         onContextMenu={killEvent}
                       />
 
-                      {/* 🔴 2. BOTTOM FULL BLOCKER (SEEKBAR + LOGO AREA) */}
+                      {/* 🔗 2. REDIRECT LINK (LOGO MASK - ALLOWS CLICK) */}
+                      <a
+                         href="https://youtube.com/@ehsansir2.0?si=80l2sFqj85RnGulA"
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         style={{
+                           position: 'absolute',
+                           bottom: 0,
+                           right: 0,
+                           width: '180px',
+                           height: '80px',
+                           zIndex: 2147483647,
+                           backgroundColor: 'rgba(255, 255, 255, 0.001)', // Visible to browser, invisible to user
+                           cursor: 'pointer',
+                           touchAction: 'auto'
+                         }}
+                         // We do NOT kill events here so the link works
+                      />
+
+                      {/* 🔒 3. BOTTOM LEFT CONTROLS BLOCKER */}
                       <div
                         style={{
                           position: 'absolute',
                           bottom: 0,
                           left: 0,
-                          width: '100%', // Blocks entire bottom strip
-                          height: '80px', 
-                          zIndex: 2147483647,
-                          backgroundColor: 'rgba(255, 255, 255, 0.001)', // Almost invisible
+                          width: '100%', // COVERS ENTIRE BOTTOM STRIP (except where the link sits above)
+                          height: '80px',
+                          zIndex: 2147483646, // One layer below the link
+                          backgroundColor: 'rgba(255, 255, 255, 0.001)',
                           touchAction: 'none'
                         }}
                         onClickCapture={killEvent}
                         onTouchStartCapture={killEvent}
-                        onMouseDownCapture={killEvent}
                       />
 
-                      {/* 🔘 FULLSCREEN BUTTON (MOVED TO TOP LEFT) */}
-                      {/* This is placed ABOVE the blockers z-index so it remains clickable */}
+                      {/* 🔘 FULLSCREEN BUTTON (MOVED TO TOP LEFT & SECURED) */}
                       <button 
                           onClick={toggleFullScreen} 
                           className="absolute top-4 left-4 z-[2147483647] bg-black/60 text-white/90 p-3 rounded-2xl backdrop-blur-md border border-white/10 hover:bg-black hover:text-white transition-all shadow-xl active:scale-90"
