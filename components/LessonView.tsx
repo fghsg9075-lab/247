@@ -80,7 +80,7 @@ export const LessonView: React.FC<Props> = ({
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
       containerRef.current?.requestFullscreen().catch(err => {
-        setAlertConfig({ isOpen: true, message: `Fullscreen failed: ${err.message}` });
+        console.error("Fullscreen Error:", err);
       });
     } else {
       document.exitFullscreen();
@@ -409,7 +409,7 @@ export const LessonView: React.FC<Props> = ({
   }
 
   // ==========================================
-  // 6. VIDEO PLAYER (SECURE OVERLAYS & REDIRECT)
+  // 6. VIDEO PLAYER (ULTRA-SECURE OVERLAYS)
   // ==========================================
   if ((content?.type === 'PDF_VIEWER' || content?.type === 'VIDEO_LECTURE') && (content?.content.includes('youtube') || content?.content.includes('youtu.be') || content?.videoPlaylist)) {
     const [activeIdx, setActiveIdx] = useState(0);
@@ -417,72 +417,93 @@ export const LessonView: React.FC<Props> = ({
     const video = playlist[activeIdx];
     let src = video.url;
     
-    // URL Cleanup for Embed
+    // URL Cleanup and Force Parameters
     if (src.includes('watch?v=')) src = `https://www.youtube.com/embed/${new URL(src).searchParams.get('v')}`;
     else if (src.includes('youtu.be/')) src = `https://www.youtube.com/embed/${src.split('youtu.be/')[1]}`;
     
-    const secureSrc = `${src}?autoplay=1&modestbranding=1&rel=0&iv_load_policy=3&controls=1&disablekb=1`;
+    // Force Z-Index Fix: modestbranding=1, rel=0, controls=1, disablekb=1
+    const secureSrc = `${src}?autoplay=1&modestbranding=1&rel=0&iv_load_policy=3&controls=1&disablekb=1&showinfo=0`;
 
     return (
-      <div className="flex flex-col h-[calc(100vh-80px)] bg-[#030712] animate-in fade-in overflow-hidden">
-        {/* Minimalist Player Header */}
-        <header className="p-4 bg-slate-950 border-b border-white/5 flex items-center justify-between">
-          <button onClick={onBack} className="p-2 text-slate-500 hover:text-white transition-colors group">
-            <ArrowLeft size={24} className="group-active:-translate-x-1 transition-transform" />
-          </button>
-          <div className="text-center flex-1">
-            <h3 className="text-white font-black text-xs sm:text-sm truncate max-w-[200px] mx-auto uppercase tracking-tighter">{video.title}</h3>
-            <div className="flex items-center justify-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-blue-500"></span>
-              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">NSTA Secured Streaming</p>
-            </div>
+      <div className="flex flex-col h-[calc(100vh-80px)] bg-black overflow-hidden animate-in fade-in">
+        {/* Header */}
+        <header className="p-4 bg-slate-900 border-b border-white/10 flex items-center justify-between relative z-[10000]">
+          <button onClick={onBack} className="p-2 text-slate-400 hover:text-white"><ArrowLeft size={24} /></button>
+          <div className="text-center">
+            <h3 className="text-white font-bold text-xs sm:text-sm uppercase tracking-tighter truncate max-w-[200px]">{video.title}</h3>
+            <p className="text-[9px] text-blue-500 font-black tracking-widest">NSTA SECURE PLAYER</p>
           </div>
           <div className="w-10"></div>
         </header>
 
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
           {/* SECURE STAGE */}
-          <div ref={containerRef} className="flex-1 bg-black relative group overflow-hidden select-none">
+          <div ref={containerRef} className="flex-1 bg-black relative overflow-hidden select-none">
             
-            {/* 🔒 BLOCKER 1: TOP-RIGHT (SHARE/SETTINGS MASK) */}
+            {/* 🔴 BLOCKER 1: TOP-RIGHT (SHARE BUTTON BLOCKER) */}
             <div 
-              className="absolute z-[70] top-0 right-0 w-[140px] h-[90px] pointer-events-auto bg-transparent" 
+              className="absolute bg-transparent pointer-events-auto"
+              style={{
+                top: 0,
+                right: 0,
+                width: '150px',
+                height: '100px',
+                zIndex: 9999, // FORCED ON TOP
+              }}
               onContextMenu={e => e.preventDefault()}
             />
 
-            {/* 🔗 BLOCKER 2: BOTTOM-RIGHT (LOGO MASK + REDIRECT) */}
+            {/* 🔗 BLOCKER 2: BOTTOM-RIGHT (LOGO MASK + REDIRECT LINK) */}
             <a
               href="https://youtube.com/@ehsansir2.0?si=80l2sFqj85RnGulA"
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute z-[75] bottom-0 right-0 w-[155px] h-[65px] pointer-events-auto bg-black flex flex-col items-center justify-center no-underline border-l border-t border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] transition-all hover:bg-zinc-950 active:scale-95"
+              className="absolute pointer-events-auto flex flex-col items-center justify-center no-underline border-l border-t border-white/10 transition-colors hover:bg-zinc-900"
+              style={{
+                bottom: 0,
+                right: 0,
+                width: '160px', // Wide enough to cover logo
+                height: '70px',
+                backgroundColor: '#000', // SOLID BLACK to hide logo
+                zIndex: 9999, // FORCED ON TOP
+                cursor: 'pointer'
+              }}
             >
-              <div className="flex flex-col items-center text-center px-2">
-                <span className="text-[10px] text-blue-500 font-black tracking-widest animate-pulse leading-none">NSTA OFFICIAL</span>
-                <span className="text-[8px] text-slate-500 font-black uppercase mt-1 tracking-tighter truncate w-full">Ideal Inspiration Classes</span>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <div className="w-1 h-1 rounded-full bg-red-500"></div>
-                  <span className="text-[7px] text-white/40 font-bold">SUBSCRIBE</span>
-                </div>
+              <span style={{ color: '#60a5fa', fontSize: '10px', fontWeight: '900', letterSpacing: '1.5px' }}>NSTA OFFICIAL</span>
+              <span style={{ color: '#94a3b8', fontSize: '8px', fontWeight: '700', marginTop: '2px' }}>@ehsansir2.0</span>
+              <div className="flex items-center gap-1 mt-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '7px', fontWeight: 'bold' }}>VISIT CHANNEL</span>
               </div>
             </a>
 
-            {/* 🔒 BLOCKER 3: BOTTOM-LEFT (MOBILE ACTION MASK) */}
-            <div className="absolute z-[70] bottom-0 left-0 w-[95px] h-[75px] pointer-events-auto bg-transparent" />
+            {/* 🔒 BLOCKER 3: BOTTOM-LEFT (MOBILE SHARE ARROW BLOCKER) */}
+            <div 
+              className="absolute bg-transparent pointer-events-auto"
+              style={{
+                bottom: 0,
+                left: 0,
+                width: '100px',
+                height: '80px',
+                zIndex: 9999, // FORCED ON TOP
+              }}
+            />
 
-            {/* FLOATING ACTION OVERLAYS */}
+            {/* 🔘 CUSTOM FULLSCREEN BUTTON (FORCED Z-INDEX) */}
             <button 
               onClick={toggleFullScreen} 
-              className="absolute top-6 left-6 z-[80] bg-black/40 text-white/80 p-4 rounded-[1.5rem] backdrop-blur-3xl border border-white/10 hover:bg-black/80 hover:text-white transition-all shadow-2xl"
+              className="absolute top-6 left-6 bg-black/60 text-white p-4 rounded-2xl backdrop-blur-md border border-white/20 hover:bg-black/90 active:scale-95 transition-all shadow-xl"
+              style={{ zIndex: 10000 }} // Higher than everything
             >
               <Maximize size={24} />
             </button>
 
-            {/* CORE IFRAME */}
+            {/* CORE IFRAME (PUSHED TO BOTTOM) */}
             <iframe 
               key={secureSrc}
               src={secureSrc}
-              className="w-full h-full border-0 pointer-events-auto" 
+              className="w-full h-full border-0" 
+              style={{ position: 'relative', zIndex: 1 }} // Pushed to bottom layer
               allow="autoplay; fullscreen; picture-in-picture"
               allowFullScreen
               sandbox="allow-scripts allow-same-origin allow-presentation"
@@ -492,7 +513,7 @@ export const LessonView: React.FC<Props> = ({
 
           {/* PLAYLIST SIDEBAR */}
           {playlist.length > 1 && (
-            <div className="w-full md:w-[350px] bg-slate-950 border-l border-white/5 overflow-y-auto flex flex-col shadow-2xl">
+            <div className="w-full md:w-[320px] bg-slate-950 border-l border-white/5 overflow-y-auto flex flex-col shadow-2xl z-[50]">
               <div className="p-5 border-b border-white/5 bg-white/5">
                 <h4 className="text-[10px] font-black text-slate-500 tracking-[0.3em] uppercase">Up Next in Series</h4>
               </div>
@@ -503,7 +524,7 @@ export const LessonView: React.FC<Props> = ({
                     onClick={() => setActiveIdx(i)} 
                     className={`w-full p-4 rounded-2xl flex gap-4 text-left transition-all duration-300 border ${i === activeIdx ? 'bg-blue-600 border-blue-500 text-white shadow-xl shadow-blue-900/20' : 'bg-slate-900/50 border-transparent text-slate-500 hover:bg-slate-900 hover:text-slate-300'}`}
                   >
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0 ${i === activeIdx ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-600'}`}>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${i === activeIdx ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-600'}`}>
                       {String(i + 1).padStart(2, '0')}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -651,4 +672,3 @@ export const LessonView: React.FC<Props> = ({
     </div>
   );
 };
-
