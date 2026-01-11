@@ -66,7 +66,7 @@ export const LessonView: React.FC<Props> = ({
   });
 
   // ==========================================
-  // 2. EFFECTS (TIMER & FULLSCREEN & SECURITY)
+  // 2. EFFECTS (TIMER & FULLSCREEN)
   // ==========================================
   
   // Timer Effect
@@ -538,7 +538,7 @@ export const LessonView: React.FC<Props> = ({
                           top: 0,
                           right: 0,
                           width: '250px', // Extra Wide to catch share & menu
-                          height: '120px', 
+                          height: '100px', 
                           zIndex: 2147483647, // Max Z-Index
                           backgroundColor: 'rgba(255, 255, 255, 0.001)', // MAGIC FIX
                           touchAction: 'none' // Disables browser gestures
@@ -699,3 +699,4 @@ export const LessonView: React.FC<Props> = ({
     </div>
   );
 };
+
